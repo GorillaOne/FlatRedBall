@@ -564,18 +564,30 @@ namespace FlatRedBall
             {
                 var framesSkipped = new List<int>();
                 var frame = frameBefore;
-
-                //Increment once since we want to ignore the last frame. 
-                if (frameBefore < mAnimationChains[mCurrentChainIndex].Count) frameBefore++;
-                else frameBefore = 0;
-
-                while (frameBefore != mCurrentChainIndex)
+                
+                //In this case, enough time has passed between frames that the animation has looped around and past the last frame.
+                if (frameBefore < mCurrentFrameIndex && JustCycled)
+                {                    
+                    for(var i = 0; i < mAnimationChains[mCurrentChainIndex].Count; i++)
+                    {
+                        framesSkipped.Add(i); 
+                    }
+                }
+                else
                 {
-                    framesSkipped.Add(frameBefore);
-
+                    //Increment once since we want to ignore the last frame. 
                     if (frameBefore < mAnimationChains[mCurrentChainIndex].Count) frameBefore++;
                     else frameBefore = 0;
-                }                 
+
+                    while (frameBefore != mCurrentChainIndex)
+                    {
+                        framesSkipped.Add(frameBefore);
+
+                        if (frameBefore < mAnimationChains[mCurrentChainIndex].Count) frameBefore++;
+                        else frameBefore = 0;
+                    }
+                }
+              
 
                 FrameChanged(this, new FrameArgs(framesSkipped, mCurrentFrameIndex, frameBefore)); 
             }            
