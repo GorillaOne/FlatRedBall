@@ -236,7 +236,7 @@ namespace FlatRedBall
                 {
                     mCurrentFrameIndex = value;
                     UpdateTimeBasedOffOfAnimationFrame();
-                    UpdateToCurrentAnimationFrame();
+                    UpdateToCurrentAnimationFrame();                    
                 }
             }
         }
@@ -461,6 +461,9 @@ namespace FlatRedBall
 
         #endregion
 
+        #region Events
+        public event EventHandler<FrameArgs> FrameChanged; 
+        #endregion
         #region Methods
 
         public override void Initialize()
@@ -546,12 +549,36 @@ namespace FlatRedBall
             {
                 UpdateToCurrentAnimationFrame();
                 mJustChangedFrame = true;
+                AlertSubscribersToFrameChange(frameBefore);
             }
 
             if (mJustCycled)
             {
                 mJustCycled = true;
             }
+        }
+
+        private void AlertSubscribersToFrameChange(int frameBefore)
+        {            
+            if (FrameChanged != null)
+            {
+                var framesSkipped = new List<int>();
+                var frame = frameBefore;
+
+                //Increment once since we want to ignore the last frame. 
+                if (frameBefore < mAnimationChains[mCurrentChainIndex].Count) frameBefore++;
+                else frameBefore = 0;
+
+                while (frameBefore != mCurrentChainIndex)
+                {
+                    framesSkipped.Add(frameBefore);
+
+                    if (frameBefore < mAnimationChains[mCurrentChainIndex].Count) frameBefore++;
+                    else frameBefore = 0;
+                }                 
+
+                FrameChanged(this, new FrameArgs(framesSkipped, mCurrentFrameIndex, frameBefore)); 
+            }            
         }
 
         #region XML Docs
@@ -812,9 +839,6 @@ namespace FlatRedBall
 
 
         #region IVisible implementation
-
-
-
         IVisible IVisible.Parent
         {
             get
@@ -837,7 +861,19 @@ namespace FlatRedBall
             get;
             set;
         }
-
         #endregion
+    }
+
+    public class FrameArgs : EventArgs
+    {
+        public int LastFrame; 
+        public List<int> FramesSkipped;
+        public int CurrentFrame; 
+        public FrameArgs(List<int> framesSkipped, int currentFrame, int lastFrame)
+        {
+            FramesSkipped = framesSkipped;
+            CurrentFrame = currentFrame;
+            LastFrame = lastFrame; 
+        }
     }
 }
