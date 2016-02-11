@@ -549,7 +549,8 @@ namespace FlatRedBall
             {
                 UpdateToCurrentAnimationFrame();
                 mJustChangedFrame = true;
-                AlertSubscribersToFrameChange(frameBefore);
+                int loops = (int)((modifiedTimePassed / animationChain.TotalLength) - (modifiedTimePassed % animationChain.TotalLength)); 
+                AlertSubscribersToFrameChange(frameBefore, loops);
             }
 
             if (mJustCycled)
@@ -558,7 +559,7 @@ namespace FlatRedBall
             }
         }
 
-        private void AlertSubscribersToFrameChange(int frameBefore)
+        private void AlertSubscribersToFrameChange(int frameBefore, int loops)
         {            
             if (FrameChanged != null)
             {
@@ -587,9 +588,8 @@ namespace FlatRedBall
                         else frameBefore = 0;
                     }
                 }
-              
 
-                FrameChanged(this, new FrameArgs(framesSkipped, mCurrentFrameIndex, frameBefore)); 
+                FrameChanged(this, new FrameArgs(framesSkipped, mCurrentFrameIndex, frameBefore, loops)); 
             }            
         }
 
@@ -770,10 +770,6 @@ namespace FlatRedBall
                 }
             }
         }
-
-
-
-
         #endregion
 
 
@@ -880,12 +876,14 @@ namespace FlatRedBall
     {
         public int LastFrame; 
         public List<int> FramesSkipped;
-        public int CurrentFrame; 
-        public FrameArgs(List<int> framesSkipped, int currentFrame, int lastFrame)
+        public int CurrentFrame;
+        public int Loops; 
+        public FrameArgs(List<int> framesSkipped, int currentFrame, int lastFrame, int loops = 0)
         {
             FramesSkipped = framesSkipped;
             CurrentFrame = currentFrame;
-            LastFrame = lastFrame; 
+            LastFrame = lastFrame;
+            Loops = loops; 
         }
     }
 }
